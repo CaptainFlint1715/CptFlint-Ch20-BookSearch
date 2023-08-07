@@ -54,8 +54,18 @@ const resolvers = {
         },
         
         removeBook: async (parent, { bookId }, context) => {
-            
+            if (context.user) {
+                return User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    {
+                        $pull: { savedBooks: bookId}
+                    },
+                    {
+                        new: true
+                    }
+                )
+            }
+            throw new AuthentificationError('Must be logged in to remove book!')
         }
-
     }
 }
