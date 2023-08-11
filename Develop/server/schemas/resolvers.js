@@ -8,7 +8,7 @@ const resolvers = {
             if (context.user) {
                 return User.findOne({ _id: context.user._id })
             }
-            throw new AuthentificationError('You must be logged in!')
+            throw new AuthenticationError('You must be logged in!')
         }
     },
 
@@ -17,13 +17,13 @@ const resolvers = {
             const user = await User.findOne({ email })
 
             if (!user) {
-                throw new AuthentificationError('No user found with this email!')
+                throw new AuthenticationError('No user found with this email!')
             }
 
             const correctPass = await user.isCorrectPassword(password)
 
             if (!correctPass) {
-                throw new AuthentificationError('Password incorrect!')
+                throw new AuthenticationError('Password incorrect!')
             }
             
             const token = signToken(user)
@@ -39,31 +39,32 @@ const resolvers = {
 
         saveBook: async (parent, { bookInfo }, context) => {
             if (context.user) {
-                return User.findOneAndUpdate(
+                const savedBookData = await User.findOneAndUpdate(
                     { _id: context.user._id },
                     {
                         $addToSet: { savedBooks: bookInfo }
                     },
                     {
-                        new: true,
-                        runValidators: true
+                        new: true
                     }
                 )
+                return savedBookData
             }
             throw new AuthentificationError('Must be logged in to save book!')
         },
         
         removeBook: async (parent, { bookId }, context) => {
             if (context.user) {
-                return User.findOneAndUpdate(
+                const updatedUser = await User.findOneAndUpdate(
                     { _id: context.user._id },
                     {
-                        $pull: { savedBooks: bookId}
+                        $pull: { savedBooks: {bookId: bookId}}
                     },
                     {
                         new: true
                     }
                 )
+                return updatedUser
             }
             throw new AuthentificationError('Must be logged in to remove book!')
         }
